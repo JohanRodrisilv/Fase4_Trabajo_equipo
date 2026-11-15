@@ -361,8 +361,30 @@ class SistemaGestion:
         return reserva  # Devuelve la reserva creada para poder operar con ella.
 
 
-def simular_diez_operaciones():  # Ejecuta ejemplos de operaciones válidas e inválidas para demostración.
+def simular_diez_operaciones(sistema_base):  # Ejecuta pruebas con datos actuales sin alterar el sistema real.
     """Realiza operaciones válidas e inválidas y continúa ante los errores."""
+    if sistema_base.clientes:
+        cliente_base = sistema_base.clientes[-1]
+        origen_cliente = "cliente registrado"
+    else:
+        cliente_base = Cliente("CLI-BASE", "Cliente de prueba", "demo@example.com")
+        origen_cliente = "datos de demostración (no hay clientes registrados)"
+    sala_base = next(
+        (servicio for servicio in sistema_base.servicios if isinstance(servicio, ServicioSala)),
+        None,
+    )
+    equipo_base = next(
+        (servicio for servicio in sistema_base.servicios if isinstance(servicio, ServicioEquipo)),
+        None,
+    )
+    asesoria_base = next(
+        (servicio for servicio in sistema_base.servicios if isinstance(servicio, ServicioAsesoria)),
+        None,
+    )
+    if sala_base is None or equipo_base is None or asesoria_base is None:
+        return "Se necesita una sala, un equipo y una asesoría registrados para simular."
+
+    participantes_sala = min(5, sala_base.capacidad)
     sistema_demo = SistemaGestion()  # Crea un sistema separado para que la demostración no use los datos de la ventana.
     resultados = []  # Prepara una lista de mensajes para mostrar el resultado de cada prueba.
     aciertos = 0  # Inicializa el contador de operaciones exitosas.
@@ -370,7 +392,7 @@ def simular_diez_operaciones():  # Ejecuta ejemplos de operaciones válidas e in
 
     # Operación 1: registro válido de cliente.
     try:  # Intenta registrar un cliente con datos correctos.
-        cliente_demo = Cliente("CLI-D1", "Ana Pérez", "ana@example.com")  # Crea un cliente de ejemplo válido.
+        cliente_demo = Cliente("CLI-D1", cliente_base.nombre, cliente_base.correo)  # Usa los datos del último cliente registrado.
         sistema_demo.registrar_cliente(cliente_demo)  # Guarda al cliente en el sistema de demostración.
     except Exception as error:  # Captura cualquier error inesperado de esta prueba.
         logging.exception("Operación 1 fallida")  # Registra el error y su traza.
