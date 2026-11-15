@@ -397,3 +397,34 @@ def simular_diez_operaciones(sistema_base):  # Ejecuta pruebas con datos actuale
     except Exception as error:  # Captura cualquier error inesperado de esta prueba.
         logging.exception("Operación 1 fallida")  # Registra el error y su traza.
         resultados.append(f"1. Error: {error}")  # Añade el detalle del error a los resultados visibles.
+    else:  # Se ejecuta si la operación terminó correctamente.
+        aciertos = aciertos + 1  # Cuenta esta operación como exitosa.
+        resultados.append(f"1. Cliente válido registrado: {cliente_demo.nombre}")  # Confirma el cliente usado como referencia.
+    finally:  # Se ejecuta tanto si la operación tuvo éxito como si falló.
+        logging.info("Terminó la operación 1")  # Registra el cierre de la prueba.
+
+    # Operación 2: registro inválido de cliente.
+    try:  # Prueba qué sucede al usar un correo sin formato válido.
+        cliente_malo = Cliente("CLI-D2", "Luis", "correo-invalido")  # Crea un cliente con un correo incorrecto.
+        sistema_demo.registrar_cliente(cliente_malo)  # Intenta guardar el cliente inválido.
+    except ValueError as error:  # Captura el rechazo esperado del correo inválido.
+        logging.exception("Operación 2 inválida controlada")  # Deja constancia de que el error fue controlado.
+        aciertos = aciertos + 1  # Cuenta como correcta la detección del dato inválido.
+        resultados.append("2. Error de cliente inválido controlado")  # Añade el resultado esperado a la lista.
+    else:  # Se ejecuta si no se produjo el error que debía ocurrir.
+        resultados.append("2. Cliente registrado")  # Informa que se registró el cliente.
+    finally:  # Se ejecuta al terminar la prueba, haya fallado o no.
+        logging.info("Terminó la operación 2")  # Registra el cierre de la prueba.
+
+    # Operación 3: servicio correcto.
+    try:  # Intenta registrar una sala con parámetros válidos.
+        sala = ServicioSala("SAL-D1", sala_base.nombre, sala_base.tarifa, sala_base.capacidad)  # Usa los datos de una sala registrada.
+        sistema_demo.registrar_servicio(sala)  # Añade la sala al sistema de demostración.
+    except Exception as error:  # Captura cualquier error ocurrido al crear o registrar la sala.
+        logging.exception("Operación 3 fallida")  # Registra el error y su traza.
+        resultados.append(f"3. Error: {error}")  # Añade el detalle del error.
+    else:  # Se ejecuta si el servicio se registró correctamente.
+        aciertos = aciertos + 1  # Cuenta la operación como exitosa.
+        resultados.append(f"3. Servicio de sala registrado: {sala.nombre} (${sala.tarifa})")  # Confirma los datos de la sala registrada.
+    finally:  # Se ejecuta al terminar la prueba en cualquier caso.
+        logging.info("Terminó la operación 3")  # Registra el cierre de la prueba.
