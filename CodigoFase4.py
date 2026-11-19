@@ -428,3 +428,342 @@ def simular_diez_operaciones(sistema_base):  # Ejecuta pruebas con datos actuale
         resultados.append(f"3. Servicio de sala registrado: {sala.nombre} (${sala.tarifa})")  # Confirma los datos de la sala registrada.
     finally:  # Se ejecuta al terminar la prueba en cualquier caso.
         logging.info("Terminó la operación 3")  # Registra el cierre de la prueba.
+   # Operación 4: servicio incorrecto.
+    try:  # Prueba la validación del aforo de una sala.
+        sala_mala = ServicioSala("SAL-D2", "Sala inválida", 10000, 0)  # Intenta crear una sala con capacidad cero.
+        sistema_demo.registrar_servicio(sala_mala)  # Esta instrucción solo se alcanzaría si la sala fuera válida.
+    except DatosInvalidosError as error:  # Captura el rechazo esperado de la capacidad no válida.
+        logging.exception("Operación 4 inválida controlada")  # Registra la excepción controlada.
+        aciertos = aciertos + 1  # Cuenta como correcta la detección del servicio inválido.
+        resultados.append("4. Error de servicio inválido controlado")  # Informa que la validación rechazó la sala.
+    else:  # Se ejecuta si no se produjo el error esperado.
+        resultados.append("4. Servicio registrado")  # Informa que se registró el servicio.
+    finally:  # Se ejecuta independientemente del resultado.
+        logging.info("Terminó la operación 4")  # Registra el cierre de la prueba.
+
+    # Operación 5: servicio de equipo.
+    try:  # Intenta crear y agregar un servicio de alquiler de equipos.
+        equipo = ServicioEquipo("EQU-D1", equipo_base.nombre, equipo_base.tarifa, equipo_base.unidades)  # Usa un equipo registrado.
+        sistema_demo.registrar_servicio(equipo)  # Registra el proyector en el sistema de demostración.
+    except Exception as error:  # Captura cualquier error de creación o registro.
+        logging.exception("Operación 5 fallida")  # Registra el error y su traza.
+        resultados.append(f"5. Error: {error}")  # Añade el detalle del error a los resultados.
+    else:  # Se ejecuta cuando el registro fue exitoso.
+        aciertos = aciertos + 1  # Cuenta la operación como exitosa.
+        resultados.append(f"5. Servicio de equipo registrado: {equipo.nombre} (${equipo.tarifa})")  # Confirma los datos del equipo.
+    finally:  # Se ejecuta al finalizar la operación.
+        logging.info("Terminó la operación 5")  # Registra el cierre de la prueba.
+
+    # Operación 6: servicio de asesoría.
+    try:  # Intenta registrar un servicio de asesoría.
+        asesoria = ServicioAsesoria("ASE-D1", asesoria_base.nombre, asesoria_base.tarifa)  # Usa una asesoría registrada.
+        sistema_demo.registrar_servicio(asesoria)  # Agrega la asesoría al sistema de demostración.
+    except Exception as error:  # Captura errores que puedan surgir al registrar el servicio.
+        logging.exception("Operación 6 fallida")  # Registra el error y su traza.
+        resultados.append(f"6. Error: {error}")  # Añade el detalle del error.
+    else:  # Se ejecuta si la asesoría se registró correctamente.
+        aciertos = aciertos + 1  # Cuenta la operación como exitosa.
+        resultados.append(f"6. Servicio de asesoría registrado: {asesoria.nombre} (${asesoria.tarifa})")  # Confirma los datos de asesoría.
+    finally:  # Se ejecuta tanto en caso de éxito como de error.
+        logging.info("Terminó la operación 6")  # Registra el cierre de la prueba.
+
+    # Operación 7: reserva confirmada.
+    try:  # Crea una reserva de sala e intenta confirmarla.
+        reserva_sala = sistema_demo.crear_reserva(  # Solicita al sistema generar una reserva nueva.
+            "CLI-D1", "SAL-D1", 2, participantes=participantes_sala  # Usa los datos del cliente y la capacidad de la sala registrada.
+        )  # Guarda la reserva creada para procesarla en la operación siguiente.
+        reserva_sala.confirmar()  # Valida y confirma la reserva de la sala.
+    except Exception as error:  # Captura cualquier error de creación o confirmación.
+        logging.exception("Operación 7 fallida")  # Registra el error y su traza.
+        resultados.append(f"7. Error: {error}")  # Añade el detalle del error a los resultados.
+    else:  # Se ejecuta si la reserva pudo confirmarse.
+        aciertos = aciertos + 1  # Cuenta la confirmación como exitosa.
+        resultados.append(f"7. Reserva confirmada para {cliente_demo.nombre} en {sala.nombre}")  # Confirma los datos usados.
+    finally:  # Se ejecuta siempre al terminar esta prueba.
+        logging.info("Terminó la operación 7")  # Registra el cierre de la prueba.
+
+    # Operación 8: cálculo con descuento e impuesto.
+    try:  # Calcula el costo final de la reserva confirmada.
+        costo = reserva_sala.procesar(impuesto=0.19, descuento=0.10)  # Aplica 19 % de impuesto y 10 % de descuento.
+    except Exception as error:  # Captura cualquier error en el procesamiento.
+        logging.exception("Operación 8 fallida")  # Registra el error y su traza.
+        resultados.append(f"8. Error: {error}")  # Añade el detalle del fallo.
+    else:  # Se ejecuta si el costo se calculó correctamente.
+        aciertos = aciertos + 1  # Cuenta el procesamiento como operación exitosa.
+        resultados.append(f"8. Reserva procesada por ${costo:.2f}")  # Añade el costo con dos decimales.
+    finally:  # Se ejecuta independientemente de que el cálculo funcione.
+        logging.info("Terminó la operación 8")  # Registra el cierre de la prueba.
+
+    # Operación 9: reserva con duración inválida.
+    try:  # Prueba que se rechace una duración de cero.
+        sistema_demo.crear_reserva("CLI-D1", "SAL-D1", 0, participantes=2)  # Intenta crear una reserva con duración inválida.
+    except DatosInvalidosError as error:  # Captura el rechazo esperado de la duración no positiva.
+        logging.exception("Operación 9 inválida controlada")  # Registra la excepción que valida el caso.
+        aciertos = aciertos + 1  # Cuenta como correcta la detección de la reserva inválida.
+        resultados.append("9. Error de duración controlado")  # Informa que el dato inválido fue rechazado.
+    else:  # Se ejecuta si la reserva fue creada pese al dato inválido.
+        resultados.append("9. Reserva creada")  # Informa que la reserva llegó a crearse.
+    finally:  # Se ejecuta al finalizar la prueba.
+        logging.info("Terminó la operación 9")  # Registra el cierre de la prueba.
+
+    # Operación 10: intento con equipo agotado.
+    try:  # Simula una solicitud cuando el inventario está agotado.
+        equipo.unidades = 0  # Establece en cero las unidades disponibles del proyector.
+        reserva_equipo = sistema_demo.crear_reserva(  # Crea una reserva para intentar pedir el equipo.
+            "CLI-D1", "EQU-D1", 1, cantidad_equipo=1  # Solicita un equipo durante un día.
+        )  # Guarda la reserva creada para intentar confirmarla.
+        reserva_equipo.confirmar()  # Intenta apartar el equipo y provoca el error si no hay existencias.
+    except ReservaInvalidaError as error:  # Captura la reserva rechazada por falta de equipos.
+        logging.exception("Operación 10 no disponible controlada")  # Registra la excepción de disponibilidad.
+        aciertos = aciertos + 1  # Cuenta como correcta la detección de la falta de equipos.
+        resultados.append("10. Falta de equipos controlada")  # Informa que el inventario agotado fue detectado.
+    else:  # Se ejecuta si el sistema permitió confirmar el equipo.
+        resultados.append("10. Reserva de equipo confirmada")  # Confirma la reserva en los resultados.
+    finally:  # Se ejecuta al finalizar la prueba.
+        logging.info("Terminó la operación 10")  # Registra el cierre de la prueba.
+
+    # Operación 11: reserva cancelada.
+    try:  # Crea una segunda reserva y la cancela después de confirmarla.
+        reserva_cancelar = sistema_demo.crear_reserva(  # Solicita crear una reserva nueva de sala.
+            "CLI-D1", "SAL-D1", 1, participantes=min(2, sala_base.capacidad)  # Ajusta los participantes a la capacidad registrada.
+        )  # Guarda la reserva que se cancelará.
+        reserva_cancelar.confirmar()  # Confirma la reserva y aparta el servicio.
+        reserva_cancelar.cancelar()  # Cancela la reserva y libera los recursos si aplica.
+    except Exception as error:  # Captura errores de creación, confirmación o cancelación.
+        logging.exception("Operación 11 fallida")  # Registra el error y su traza.
+        resultados.append(f"11. Error: {error}")  # Añade el detalle del error.
+    else:  # Se ejecuta si la reserva fue confirmada y cancelada correctamente.
+        aciertos = aciertos + 1  # Cuenta la operación como exitosa.
+        resultados.append("11. Reserva confirmada y cancelada")  # Informa el resultado de la prueba.
+    finally:  # Se ejecuta al terminar la operación en cualquier caso.
+        logging.info("Terminó la operación 11")  # Registra el cierre de la prueba.
+
+    resultados.append(  # Muestra qué datos reales sirvieron de base para estas pruebas.
+        f"\nDatos de referencia: {cliente_base.nombre}, {sala_base.nombre}, "
+        f"{equipo_base.nombre} y {asesoria_base.nombre}."
+    )
+    resultados.append(f"Origen del cliente de prueba: {origen_cliente}.")
+    resultados.append(  # Indica cuántos registros reales hay al momento de simular.
+        f"Reservas reales registradas: {len(sistema_base.reservas)}."
+    )
+    for reserva_real in sistema_base.reservas[-3:]:
+        resultados.append(f"  {reserva_real.describir()} (costo: ${reserva_real.costo:.2f})")
+    resultados.append(f"Operaciones correctas: {aciertos} de 11")  # Añade el total de operaciones exitosas.
+    return "\n".join(resultados)  # Une los mensajes separados por saltos de línea y los devuelve.
+
+
+# Los datos de negocio permanecen en las listas durante la ejecución.
+sistema_fj = SistemaGestion()
+sistema_fj.registrar_servicio(ServicioSala("SAL-01", "Sala principal", 25000, 20))
+sistema_fj.registrar_servicio(ServicioEquipo("EQU-01", "Proyector", 40000, 5))
+sistema_fj.registrar_servicio(ServicioAsesoria("ASE-01", "Asesoría especializada", 60000))
+
+# Panel agregado para crear y administrar reservas.
+ventana.geometry("1150x900")  # Amplía la ventana para que quepan los controles de reservas.
+marco_sistema = ttk.LabelFrame(ventana, text="Servicios y reservas")  # Crea un panel con título para agrupar los controles.
+marco_sistema.grid(row=4, column=0, columnspan=5, padx=12, pady=10, sticky="nsew")  # Ubica el panel debajo del formulario de cliente.
+for columna in range(6):  # Recorre las seis columnas disponibles en el panel.
+    marco_sistema.grid_columnconfigure(columna, weight=1)  # Permite que cada columna se expanda proporcionalmente.
+
+lista_clientes_sistema = tk.Listbox(marco_sistema, height=4, width=45)  # Crea la lista visual de clientes registrados.
+lista_clientes_sistema.grid(row=1, column=0, columnspan=3, padx=8, pady=4, sticky="nsew")  # Sitúa la lista en la mitad izquierda.
+ttk.Label(marco_sistema, text="Clientes guardados").grid(row=0, column=0, columnspan=3)  # Añade el título de la lista de clientes.
+lista_servicios_sistema = tk.Listbox(marco_sistema, height=4, width=60)  # Crea la lista visual de servicios.
+lista_servicios_sistema.grid(row=1, column=3, columnspan=3, padx=8, pady=4, sticky="nsew")  # Sitúa los servicios en la mitad derecha.
+ttk.Label(marco_sistema, text="Servicios disponibles").grid(row=0, column=3, columnspan=3)  # Añade el título de la lista de servicios.
+
+marco_cliente = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y el selector de cliente.
+marco_cliente.grid(row=2, column=0, columnspan=2, padx=8, pady=(10, 4), sticky="ew")
+marco_cliente.grid_columnconfigure(0, weight=1)
+ttk.Label(marco_cliente, text="Cliente ID").grid(row=0, column=0, sticky="w")
+selector_cliente = ttk.Combobox(marco_cliente, state="readonly", width=18)  # Crea un menú desplegable para elegir un cliente.
+selector_cliente.grid(row=1, column=0, pady=(3, 0), sticky="ew")
+
+marco_servicio = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y el selector de servicio.
+marco_servicio.grid(row=2, column=2, columnspan=2, padx=8, pady=(10, 4), sticky="ew")
+marco_servicio.grid_columnconfigure(0, weight=1)
+ttk.Label(marco_servicio, text="Servicio ID").grid(row=0, column=0, sticky="w")
+selector_servicio = ttk.Combobox(marco_servicio, state="readonly", width=18)  # Crea un menú desplegable de servicios.
+selector_servicio.grid(row=1, column=0, pady=(3, 0), sticky="ew")
+
+marco_duracion = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y el campo de duración.
+marco_duracion.grid(row=2, column=4, columnspan=2, padx=8, pady=(10, 4), sticky="ew")
+ttk.Label(marco_duracion, text="Duración").grid(row=0, column=0, sticky="w")  # Muestra el texto que identifica la duración.
+entrada_duracion = ttk.Entry(marco_duracion, width=10)  # Crea el campo para introducir la duración.
+entrada_duracion.insert(0, "1")  # Coloca una duración inicial de una unidad de tiempo.
+entrada_duracion.grid(row=1, column=0, pady=(3, 0), sticky="w")  # Sitúa la casilla debajo de su etiqueta.
+
+marco_participantes = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y la cantidad de participantes.
+marco_participantes.grid(row=3, column=0, columnspan=2, padx=8, pady=4, sticky="ew")
+ttk.Label(marco_participantes, text="Participantes para sala").grid(row=0, column=0, sticky="w")  # Identifica el campo de asistentes.
+entrada_participantes = ttk.Entry(marco_participantes, width=10)  # Crea la entrada para la cantidad de participantes.
+entrada_participantes.insert(0, "2")  # Propone dos participantes como valor inicial.
+entrada_participantes.grid(row=1, column=0, pady=(3, 0), sticky="w")  # Ubica el campo debajo de su etiqueta.
+
+marco_equipos = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y la cantidad de equipos.
+marco_equipos.grid(row=3, column=2, columnspan=2, padx=8, pady=4, sticky="ew")
+ttk.Label(marco_equipos, text="Equipos para alquilar").grid(row=0, column=0, sticky="w")  # Identifica el campo de unidades de equipo.
+entrada_cantidad_equipo = ttk.Entry(marco_equipos, width=10)  # Crea el campo para la cantidad de equipos.
+entrada_cantidad_equipo.insert(0, "1")  # Propone un equipo como cantidad inicial.
+entrada_cantidad_equipo.grid(row=1, column=0, pady=(3, 0), sticky="w")  # Ubica el campo debajo de su etiqueta.
+
+marco_modalidad = ttk.Frame(marco_sistema)  # Agrupa la etiqueta y el selector de modalidad.
+marco_modalidad.grid(row=3, column=4, columnspan=2, padx=8, pady=4, sticky="ew")
+ttk.Label(marco_modalidad, text="Modalidad asesoría").grid(row=0, column=0, sticky="w")  # Identifica el campo de modalidad.
+selector_modalidad = ttk.Combobox(  # Crea un menú desplegable para elegir la modalidad de asesoría.
+    marco_modalidad, state="readonly", width=16, values=("virtual", "presencial")
+)  # Limita las opciones a las modalidades aceptadas por el sistema.
+selector_modalidad.current(0)  # Selecciona virtual como modalidad inicial.
+selector_modalidad.grid(row=1, column=0, pady=(3, 0), sticky="w")  # Ubica el selector debajo de su etiqueta.
+
+lista_reservas_sistema = tk.Listbox(marco_sistema, height=4, width=100)  # Crea el área que mostrará las reservas registradas.
+lista_reservas_sistema.grid(row=6, column=0, columnspan=6, padx=8, pady=4, sticky="nsew")  # Extiende la lista de reservas por todo el panel.
+ttk.Label(marco_sistema, text="Reservas").grid(row=5, column=0, columnspan=6)  # Añade el título de la lista de reservas.
+selector_reserva = ttk.Combobox(marco_sistema, state="readonly", width=14)  # Crea un selector para elegir una reserva por su código.
+selector_reserva.grid(row=7, column=2, columnspan=2, padx=4, pady=8, sticky="ew")  # Ubica el selector debajo de la lista de reservas.
+
+
+def actualizar_listas_sistema():  # Actualiza lo que muestran las listas y menús desplegables.
+    lista_clientes_sistema.delete(0, tk.END)  # Borra los clientes mostrados anteriormente.
+    for cliente in sistema_fj.clientes:  # Recorre los clientes guardados en el sistema principal.
+        lista_clientes_sistema.insert(tk.END, cliente.describir())  # Muestra la descripción de cada cliente.
+    lista_servicios_sistema.delete(0, tk.END)  # Borra los servicios mostrados anteriormente.
+    for servicio in sistema_fj.servicios:  # Recorre los servicios registrados.
+        lista_servicios_sistema.insert(tk.END, servicio.describir())  # Muestra la descripción de cada servicio.
+    lista_reservas_sistema.delete(0, tk.END)  # Borra las reservas mostradas anteriormente.
+    for reserva in sistema_fj.reservas:  # Recorre todas las reservas existentes.
+        lista_reservas_sistema.insert(tk.END, reserva.describir())  # Muestra la descripción y estado de cada reserva.
+
+    ids_clientes = []  # Prepara la lista de identificadores para el selector de clientes.
+    for cliente in sistema_fj.clientes:  # Recorre los clientes disponibles.
+        ids_clientes.append(cliente.identificador)  # Añade el código de cada cliente a la lista.
+    selector_cliente["values"] = ids_clientes  # Carga los códigos en el menú desplegable de clientes.
+    ids_servicios = []  # Prepara la lista de identificadores de servicios.
+    for servicio in sistema_fj.servicios:  # Recorre los servicios disponibles.
+        ids_servicios.append(servicio.identificador)  # Añade el código de cada servicio a la lista.
+    selector_servicio["values"] = ids_servicios  # Carga los códigos en el menú desplegable de servicios.
+    ids_reservas = []  # Prepara la lista de identificadores de reservas.
+    for reserva in sistema_fj.reservas:  # Recorre las reservas registradas.
+        ids_reservas.append(reserva.identificador)  # Añade el código de cada reserva a la lista.
+    selector_reserva["values"] = ids_reservas  # Carga los códigos en el menú desplegable de reservas.
+
+
+def guardar_cliente_en_sistema():  # Lee el formulario y registra el nuevo cliente.
+    try:  # Inicia el proceso que puede fallar por datos inválidos.
+        identificador = f"CLI-{len(sistema_fj.clientes) + 1:03d}"  # Genera un código secuencial de cliente.
+        cliente = Cliente(identificador, Entry_nombre.get(), Entry_correo.get())  # Crea el cliente con los valores del formulario.
+        sistema_fj.registrar_cliente(cliente)  # Valida y almacena el cliente en el sistema.
+    except Exception as error:  # Captura errores de validación o registro.
+        logging.exception("No se pudo agregar el cliente a la lista")  # Registra el error y su traza.
+        messagebox.showwarning("Datos del cliente", str(error))  # Muestra al usuario la causa del rechazo.
+    else:  # Se ejecuta cuando el cliente se guardó correctamente.
+        actualizar_listas_sistema()  # Refresca la lista visual y el selector de clientes.
+        Entry_nombre.delete(0, tk.END)  # Limpia el campo del nombre.
+        Entry_correo.delete(0, tk.END)  # Limpia el campo del correo.
+        messagebox.showinfo("Cliente guardado", cliente.describir())  # Confirma el registro mostrando los datos del cliente.
+    finally:  # Se ejecuta después del intento de guardar, haya tenido éxito o no.
+        logging.info("Terminó el intento de guardar cliente")  # Registra el fin del proceso.
+
+
+# Se conecta el botón existente con la lista de clientes del sistema.
+boton_registrar.configure(command=guardar_cliente_en_sistema)  # Cambia la acción del botón para guardar el cliente en el sistema.
+
+
+def crear_reserva_desde_formulario():  # Crea y confirma una reserva usando los datos de la interfaz.
+    reserva = None
+    try:  # Inicia la lectura y validación de los controles.
+        duracion = float(entrada_duracion.get())  # Convierte el texto de duración a número decimal.
+        participantes = int(entrada_participantes.get())  # Convierte el texto de participantes a entero.
+        cantidad_equipo = int(entrada_cantidad_equipo.get())  # Convierte la cantidad de equipos a entero.
+        modalidad = selector_modalidad.get()  # Lee la modalidad seleccionada.
+        reserva = sistema_fj.crear_reserva(  # Pide al sistema construir una reserva con los datos ingresados.
+            selector_cliente.get(), selector_servicio.get(), duracion,  # Pasa los identificadores seleccionados y la duración.
+            participantes, cantidad_equipo, modalidad  # Pasa el resto de parámetros del servicio.
+        )  # Guarda el objeto de reserva creado.
+        reserva.confirmar()  # Valida la disponibilidad y confirma la reserva.
+    except (ErrorSistema, ValueError) as error:  # Captura errores del sistema o conversiones numéricas incorrectas.
+        logging.exception("No se pudo crear la reserva desde la ventana")  # Registra el fallo con su traza.
+        if reserva is not None and reserva.estado == "Pendiente":
+            sistema_fj.reservas.remove(reserva)
+            logging.info("Se retiró la reserva %s porque no pudo confirmarse", reserva.identificador)
+        actualizar_listas_sistema()  # Refresca las listas por si el estado cambió antes del error.
+        messagebox.showwarning("Reserva no creada", str(error))  # Informa al usuario del motivo del fallo.
+    else:  # Se ejecuta cuando la reserva se creó y confirmó correctamente.
+        actualizar_listas_sistema()  # Muestra la nueva reserva y actualiza los selectores.
+        messagebox.showinfo("Reserva creada", f"La reserva {reserva.identificador} está confirmada.")  # Confirma el resultado al usuario.
+    finally:  # Se ejecuta al terminar el intento, con éxito o con error.
+        logging.info("Terminó el intento de crear reserva")  # Registra el cierre del intento.
+
+
+def procesar_reserva_seleccionada():  # Calcula el costo de la reserva elegida en el selector.
+    try:  # Inicia la búsqueda y el procesamiento de la reserva.
+        reserva = None  # Inicializa la variable para detectar si se encontró la reserva.
+        for reserva_guardada in sistema_fj.reservas:  # Recorre todas las reservas registradas.
+            if reserva_guardada.identificador == selector_reserva.get():  # Compara el identificador con la opción seleccionada.
+                reserva = reserva_guardada  # Guarda la reserva que coincide con el selector.
+        if reserva is None:  # Comprueba que se haya encontrado una reserva seleccionada.
+            raise DatosInvalidosError("Seleccione una reserva.")  # Solicita una selección si no se encontró ninguna.
+        costo = reserva.procesar(impuesto=0.19)  # Procesa la reserva aplicando un impuesto del 19 por ciento.
+    except ErrorSistema as error:  # Captura errores de estado o validación del sistema.
+        logging.exception("No se pudo procesar la reserva seleccionada")  # Registra la excepción y su traza.
+        messagebox.showwarning("No se pudo procesar", str(error))  # Muestra el motivo por el que no se pudo procesar.
+    else:  # Se ejecuta cuando el cálculo terminó sin errores.
+        actualizar_listas_sistema()  # Refresca la lista para mostrar el nuevo estado de la reserva.
+        messagebox.showinfo("Reserva procesada", f"Costo final: ${costo:.2f}")  # Muestra el costo final con dos decimales.
+    finally:  # Se ejecuta al terminar el intento de procesamiento.
+        logging.info("Terminó el intento de procesar reserva")  # Registra el cierre del intento.
+
+
+def cancelar_reserva_seleccionada():  # Cancela la reserva elegida en el selector.
+    try:  # Inicia la búsqueda de la reserva y su cancelación.
+        reserva = None  # Inicializa la variable que contendrá la reserva encontrada.
+        for reserva_guardada in sistema_fj.reservas:  # Revisa las reservas almacenadas.
+            if reserva_guardada.identificador == selector_reserva.get():  # Comprueba si coincide con el identificador elegido.
+                reserva = reserva_guardada  # Conserva la reserva coincidente.
+        if reserva is None:  # Comprueba que se haya seleccionado una reserva existente.
+            raise DatosInvalidosError("Seleccione una reserva.")  # Informa que debe elegirse una reserva.
+        reserva.cancelar()  # Cambia el estado de la reserva a cancelada.
+    except ErrorSistema as error:  # Captura errores si el estado no permite cancelar.
+        logging.exception("No se pudo cancelar la reserva seleccionada")  # Registra la excepción con su traza.
+        messagebox.showwarning("No se pudo cancelar", str(error))  # Informa al usuario por qué no se canceló.
+    else:  # Se ejecuta cuando la cancelación terminó correctamente.
+        actualizar_listas_sistema()  # Refresca las listas para mostrar el nuevo estado.
+        messagebox.showinfo("Reserva cancelada", reserva.identificador)  # Confirma la cancelación con su código.
+    finally:  # Se ejecuta al final del intento en cualquier caso.
+        logging.info("Terminó el intento de cancelar reserva")  # Registra el cierre del intento.
+
+
+def mostrar_simulacion():  # Ejecuta la simulación y muestra sus resultados en la ventana.
+    try:  # Inicia la preparación del cuadro de texto de resultados.
+        salida_operaciones.configure(state="normal")  # Habilita temporalmente la edición del cuadro.
+        salida_operaciones.delete("1.0", tk.END)  # Borra el texto de la simulación anterior.
+        salida_operaciones.insert(tk.END, simular_diez_operaciones(sistema_fj))  # Usa los datos actuales como base de las pruebas.
+        salida_operaciones.configure(state="disabled")  # Impide que el usuario modifique el resultado mostrado.
+    except Exception as error:  # Captura errores al ejecutar o mostrar la simulación.
+        logging.exception("No se pudo mostrar la simulación")  # Registra el error y su traza.
+        messagebox.showerror("Error", str(error))  # Muestra una ventana con el detalle del error.
+
+
+ttk.Button(marco_sistema, text="Crear y confirmar reserva", command=crear_reserva_desde_formulario).grid(  # Crea y ubica el botón para reservar.
+    row=7, column=0, columnspan=2, padx=8, pady=8, sticky="e"  # Coloca el botón al inicio de la fila de acciones.
+)  # Finaliza la configuración de posición del botón.
+ttk.Button(marco_sistema, text="Procesar", command=procesar_reserva_seleccionada).grid(  # Crea el botón para calcular el costo.
+    row=7, column=4, padx=8, pady=8, sticky="e"  # Ubica el botón de procesamiento debajo de la lista.
+)  # Finaliza la configuración de posición del botón.
+ttk.Button(marco_sistema, text="Cancelar", command=cancelar_reserva_seleccionada).grid(  # Crea el botón para cancelar una reserva.
+    row=7, column=5, padx=8, pady=8, sticky="w"  # Ubica el botón de cancelación junto al botón de procesamiento.
+)  # Finaliza la configuración de posición del botón.
+boton_simular = ttk.Button(  # Crea el botón que inicia las operaciones de demostración.
+    ventana, text="Simular las 11 operaciones", command=mostrar_simulacion  # Define el texto del botón y la función que ejecuta.
+)  # Guarda el botón para poder ubicarlo en la ventana.
+boton_simular.grid(row=5, column=0, columnspan=5, pady=6)  # Sitúa el botón de simulación ocupando las cinco columnas.
+salida_operaciones = tk.Text(ventana, height=9, wrap="word", state="disabled")  # Crea el cuadro no editable para mostrar resultados.
+salida_operaciones.grid(row=6, column=0, columnspan=4, padx=12, pady=5, sticky="nsew")  # Ubica el cuadro de resultados debajo del botón.
+scrollbar_operaciones = ttk.Scrollbar(ventana, orient="vertical", command=salida_operaciones.yview)  # Permite recorrer el reporte completo.
+scrollbar_operaciones.grid(row=6, column=4, pady=5, sticky="ns")  # Ubica la barra al lado del reporte.
+salida_operaciones.configure(yscrollcommand=scrollbar_operaciones.set)  # Sincroniza la barra con el contenido del reporte.
+ventana.grid_rowconfigure(6, weight=1)  # Permite que la fila de resultados crezca al redimensionar la ventana.
+actualizar_listas_sistema()  # Llena inicialmente las listas y selectores con los datos existentes.
+
+ventana.mainloop()  # Mantiene abierta la ventana y atiende las acciones del usuario. 
+
