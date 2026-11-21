@@ -71,15 +71,25 @@ def ajustar_ancho_casilla_correo(event):  # Ajusta el ancho del campo del correo
 
 Entry_correo.bind("<KeyRelease>", ajustar_ancho_casilla_correo)  # Llama al ajuste cada vez que se suelta una tecla en el correo.
 
-def registrar_cliente():  # Reúne los datos escritos y valida que estén completos.
-    nombre = Entry_nombre.get().strip()  # Lee el nombre y elimina los espacios de los extremos.
-    correo = Entry_correo.get().strip()  # Lee el correo y elimina los espacios de los extremos.
-    
-    if not nombre or not correo:  # Comprueba si falta el nombre o el correo.
-        messagebox.showwarning("Datos incompletos", "Por favor escriba el nombre y correo del cliente.")  # Muestra un aviso si falta algún dato.
-        return  # Termina aquí para no continuar con datos incompletos.
-    messagebox.showinfo("Datos registrados", f"Nombre: {nombre}\nCorreo: {correo}")  # Confirma el registro mostrando los datos ingresados.
-    
+def registrar_cliente():  # Valida y guarda el cliente que se escribió en el formulario.
+    try:  # Inicia el intento de registrar el cliente.
+        nombre = Entry_nombre.get().strip()  # Lee y limpia el nombre del formulario.
+        correo = Entry_correo.get().strip()  # Lee y limpia el correo del formulario.
+        if not nombre or not correo:  # Comprueba que ambos campos tengan datos.
+            raise DatosInvalidosError("Escriba el nombre y el correo del cliente.")
+        identificador = f"CLI-{len(sistema_fj.clientes) + 1:03d}"  # Genera el identificador del cliente.
+        cliente = Cliente(identificador, nombre, correo)  # Crea el objeto Cliente.
+        sistema_fj.registrar_cliente(cliente)  # Guarda el objeto en la lista del sistema.
+    except (ErrorSistema, ValueError) as error:  # Controla los errores de validación o registro.
+        logging.exception("No se pudo registrar el cliente")  # Guarda el error en el archivo de logs.
+        messagebox.showwarning("Datos del cliente", str(error))  # Informa el motivo del error.
+    else:  # Se ejecuta cuando el cliente se guardó correctamente.
+        actualizar_listas_sistema()  # Refresca las listas y el selector de clientes.
+        Entry_nombre.delete(0, tk.END)  # Limpia el campo del nombre.
+        Entry_correo.delete(0, tk.END)  # Limpia el campo del correo.
+        messagebox.showinfo("Cliente guardado", cliente.describir())  # Confirma que el cliente quedó guardado.
+    finally:  # Se ejecuta al terminar el intento, haya éxito o error.
+        logging.info("Terminó el intento de registrar un cliente")  # Anota el final del proceso.
 boton_registrar = ttk.Button(ventana, text="Registrar cliente", command=registrar_cliente)  # Crea el botón y conecta su acción con el registro.
 boton_registrar.grid(row=3, column=0, columnspan=2, pady=20)  # Ubica el botón debajo de los campos.
 
@@ -648,27 +658,6 @@ def actualizar_listas_sistema():  # Actualiza lo que muestran las listas y menú
     selector_reserva["values"] = ids_reservas  # Carga los códigos en el menú desplegable de reservas.
 
 
-def guardar_cliente_en_sistema():  # Lee el formulario y registra el nuevo cliente.
-    try:  # Inicia el proceso que puede fallar por datos inválidos.
-        identificador = f"CLI-{len(sistema_fj.clientes) + 1:03d}"  # Genera un código secuencial de cliente.
-        cliente = Cliente(identificador, Entry_nombre.get(), Entry_correo.get())  # Crea el cliente con los valores del formulario.
-        sistema_fj.registrar_cliente(cliente)  # Valida y almacena el cliente en el sistema.
-    except Exception as error:  # Captura errores de validación o registro.
-        logging.exception("No se pudo agregar el cliente a la lista")  # Registra el error y su traza.
-        messagebox.showwarning("Datos del cliente", str(error))  # Muestra al usuario la causa del rechazo.
-    else:  # Se ejecuta cuando el cliente se guardó correctamente.
-        actualizar_listas_sistema()  # Refresca la lista visual y el selector de clientes.
-        Entry_nombre.delete(0, tk.END)  # Limpia el campo del nombre.
-        Entry_correo.delete(0, tk.END)  # Limpia el campo del correo.
-        messagebox.showinfo("Cliente guardado", cliente.describir())  # Confirma el registro mostrando los datos del cliente.
-    finally:  # Se ejecuta después del intento de guardar, haya tenido éxito o no.
-        logging.info("Terminó el intento de guardar cliente")  # Registra el fin del proceso.
-
-
-# Se conecta el botón existente con la lista de clientes del sistema.
-boton_registrar.configure(command=guardar_cliente_en_sistema)  # Cambia la acción del botón para guardar el cliente en el sistema.
-
-
 def crear_reserva_desde_formulario():  # Crea y confirma una reserva usando los datos de la interfaz.
     reserva = None
     try:  # Inicia la lectura y validación de los controles.
@@ -766,4 +755,3 @@ ventana.grid_rowconfigure(6, weight=1)  # Permite que la fila de resultados crez
 actualizar_listas_sistema()  # Llena inicialmente las listas y selectores con los datos existentes.
 
 ventana.mainloop()  # Mantiene abierta la ventana y atiende las acciones del usuario. 
-
