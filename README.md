@@ -41,3 +41,5 @@ Origen del cliente de prueba: cliente registrado.
 Reservas reales registradas: 1.
   RES-001 - Johan - Sala principal - Completada (costo: $89250.00)
 Operaciones correctas: 11 de 11
+
+historial de commits: https://github.com/JohanRodrisilv/Fase4_Trabajo_equipo/commits/main/
